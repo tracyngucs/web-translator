@@ -96,19 +96,6 @@
   function translateTo(lang) {
     setActiveLang(lang);
     if (lang === 'en') {
-      // Use Google Translate's internal restore function
-      if (typeof google !== 'undefined' && google.translate) {
-        const el = new google.translate.TranslateElement();
-        if (typeof el.restore === 'function') { el.restore(); return; }
-      }
-      // Fallback: use the global restore function Google exposes
-      if (typeof googleTranslateElementInit !== 'undefined') {
-        const fn = window['google'] && window['google']['translate'] &&
-                   window['google']['translate']['TranslateElement'] &&
-                   window['google']['translate']['TranslateElement']['getInstance'];
-        if (fn) { fn().restore(); return; }
-      }
-      // Final fallback: trigger via the select (set to English)
       triggerTranslate('en');
       return;
     }
