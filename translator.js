@@ -2,11 +2,10 @@
   // ── Styles ──────────────────────────────────────────────────────────────
   const css = `
     .goog-te-banner-frame, #goog-gt-tt, .goog-te-balloon-frame,
-    .goog-te-menu-frame, .skiptranslate, #goog-gt-tt,
-    iframe.goog-te-menu-frame { display: none !important; }
-    body { top: 0 !important; margin-top: 52px !important; }
-    #google_translate_element { display: none; }
+    .goog-te-menu-frame, .skiptranslate, iframe.goog-te-menu-frame,
     .goog-te-spinner-pos { display: none !important; }
+    body { top: 0 !important; margin-top: 52px !important; }
+    #google_translate_element { display: none !important; }
 
     #sq-translator-bar {
       position: fixed;
@@ -74,37 +73,52 @@
   gtScript.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
   document.head.appendChild(gtScript);
 
-  // ── Language switching ────────────────────────────────────────────────
+  // ── Highlight active button ───────────────────────────────────────────
   function setActiveLang(lang) {
     document.querySelectorAll('.sq-lang-btn').forEach(b => {
       b.classList.toggle('active', b.dataset.lang === lang);
     });
   }
 
-  function clearGoogCookies() {
-    const host = window.location.hostname;
-    const expires = 'expires=Thu, 01 Jan 1970 00:00:00 UTC';
-    document.cookie = `googtrans=; ${expires}; path=/`;
-    document.cookie = `googtrans=; ${expires}; path=/; domain=${host}`;
-    document.cookie = `googtrans=; ${expires}; path=/; domain=.${host}`;
+  // ── Trigger Google Translate select ──────────────────────────────────
+  function triggerTranslate(lang) {
+    // Find the hidden <select> Google Translate injects
+    const select = document.querySelector('.goog-te-combo');
+    if (!select) {
+      setTimeout(() => triggerTranslate(lang), 300);
+      return;
+    }
+    select.value = lang;
+    select.dispatchEvent(new Event('change'));
   }
 
+  // ── Language switching ────────────────────────────────────────────────
   function translateTo(lang) {
-    clearGoogCookies();
-    if (lang !== 'en') {
+    setActiveLang(lang);
+    if (lang === 'en') {
+      // Restore original using Google's own restore mechanism
+      const restore = document.querySelector('.goog-te-menu-value span');
+      const iframe = document.querySelector('.goog-te-banner-frame');
+      if (iframe) {
+        const btn = iframe.contentDocument && iframe.contentDocument.querySelector('a[class*="restore"]');
+        if (btn) { btn.click(); return; }
+      }
+      // Fallback: reload with cleared cookies
       const host = window.location.hostname;
-      document.cookie = `googtrans=/en/${lang}; path=/`;
-      document.cookie = `googtrans=/en/${lang}; path=/; domain=${host}`;
-      document.cookie = `googtrans=/en/${lang}; path=/; domain=.${host}`;
+      const exp = 'expires=Thu, 01 Jan 1970 00:00:00 UTC';
+      document.cookie = `googtrans=; ${exp}; path=/`;
+      document.cookie = `googtrans=; ${exp}; path=/; domain=${host}`;
+      document.cookie = `googtrans=; ${exp}; path=/; domain=.${host}`;
+      window.location.reload();
+      return;
     }
-    window.location.reload();
+    triggerTranslate(lang);
   }
 
   bar.querySelectorAll('.sq-lang-btn').forEach(btn => {
     btn.addEventListener('click', () => translateTo(btn.dataset.lang));
   });
 
-  // ── Highlight active language on load ────────────────────────────────
-  const match = document.cookie.match(/googtrans=\/en\/([^;]+)/);
-  setActiveLang(match ? match[1] : 'en');
+  // ── Set English active on load (fresh page = no translation) ─────────
+  setActiveLang('en');
 })();
