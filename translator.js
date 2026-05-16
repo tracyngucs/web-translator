@@ -1,9 +1,12 @@
 (function () {
   // ── Styles ──────────────────────────────────────────────────────────────
   const css = `
-    .goog-te-banner-frame, #goog-gt-tt, .goog-te-balloon-frame { display: none !important; }
+    .goog-te-banner-frame, #goog-gt-tt, .goog-te-balloon-frame,
+    .goog-te-menu-frame, .skiptranslate, #goog-gt-tt,
+    iframe.goog-te-menu-frame { display: none !important; }
     body { top: 0 !important; margin-top: 52px !important; }
     #google_translate_element { display: none; }
+    .goog-te-spinner-pos { display: none !important; }
 
     #sq-translator-bar {
       position: fixed;
