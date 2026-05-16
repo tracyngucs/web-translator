@@ -82,6 +82,7 @@
 
   // ── Trigger Google Translate select ──────────────────────────────────
   let lastLang = 'en';
+  let isRestoring = false;
 
   function triggerTranslate(lang) {
     const select = document.querySelector('.goog-te-combo');
@@ -93,17 +94,32 @@
     select.dispatchEvent(new Event('change'));
   }
 
+  function waitForRestore(lang, tries) {
+    if (tries <= 0) { triggerTranslate(lang); isRestoring = false; return; }
+    const select = document.querySelector('.goog-te-combo');
+    // Wait until select value is back to 'en' before switching
+    if (select && select.value === 'en') {
+      setTimeout(() => { triggerTranslate(lang); isRestoring = false; }, 200);
+    } else {
+      setTimeout(() => waitForRestore(lang, tries - 1), 200);
+    }
+  }
+
   // ── Language switching ────────────────────────────────────────────────
   function translateTo(lang) {
     setActiveLang(lang);
     if (lang === 'en') {
       triggerTranslate('en');
       lastLang = 'en';
+      isRestoring = true;
       return;
     }
-    // If coming from English, give Google Translate a moment to reset
-    const delay = lastLang === 'en' ? 500 : 0;
-    setTimeout(() => triggerTranslate(lang), delay);
+    if (isRestoring) {
+      // Still restoring to English — wait for it to finish first
+      waitForRestore(lang, 10);
+    } else {
+      triggerTranslate(lang);
+    }
     lastLang = lang;
   }
 
