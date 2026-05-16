@@ -81,46 +81,39 @@
   }
 
   // ── Trigger Google Translate select ──────────────────────────────────
-  let lastLang = 'en';
-  let isRestoring = false;
-
-  function triggerTranslate(lang) {
+  // ── Language switching ────────────────────────────────────────────────
+  let switching = false;
+  function translateTo(lang) {
+    if (switching) return;
     const select = document.querySelector('.goog-te-combo');
     if (!select) {
-      setTimeout(() => triggerTranslate(lang), 300);
+      setTimeout(() => translateTo(lang), 300);
       return;
     }
-    select.value = lang;
-    select.dispatchEvent(new Event('change'));
-  }
-
-  function waitForRestore(lang, tries) {
-    if (tries <= 0) { triggerTranslate(lang); isRestoring = false; return; }
-    const select = document.querySelector('.goog-te-combo');
-    // Wait until select value is back to 'en' before switching
-    if (select && select.value === 'en') {
-      setTimeout(() => { triggerTranslate(lang); isRestoring = false; }, 200);
-    } else {
-      setTimeout(() => waitForRestore(lang, tries - 1), 200);
-    }
-  }
-
-  // ── Language switching ────────────────────────────────────────────────
-  function translateTo(lang) {
     setActiveLang(lang);
+    switching = true;
+    // Switching back to English
     if (lang === 'en') {
-      triggerTranslate('en');
-      lastLang = 'en';
-      isRestoring = true;
+      select.value = 'en';
+      select.dispatchEvent(new Event('change'));
+      setTimeout(() => { switching = false; }, 800);
       return;
     }
-    if (isRestoring) {
-      // Still restoring to English — wait for it to finish first
-      waitForRestore(lang, 10);
+    // If coming from translated state → force reset first
+    if (select.value !== 'en') {
+      select.value = 'en';
+      select.dispatchEvent(new Event('change'));
+      setTimeout(() => {
+        select.value = lang;
+        select.dispatchEvent(new Event('change'));
+        switching = false;
+      }, 600);
     } else {
-      triggerTranslate(lang);
+      // Already English → translate immediately
+      select.value = lang;
+      select.dispatchEvent(new Event('change'));
+      setTimeout(() => { switching = false; }, 500);
     }
-    lastLang = lang;
   }
 
   bar.querySelectorAll('.sq-lang-btn').forEach(btn => {
