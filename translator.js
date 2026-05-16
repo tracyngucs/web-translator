@@ -81,8 +81,9 @@
   }
 
   // ── Trigger Google Translate select ──────────────────────────────────
+  let lastLang = 'en';
+
   function triggerTranslate(lang) {
-    // Find the hidden <select> Google Translate injects
     const select = document.querySelector('.goog-te-combo');
     if (!select) {
       setTimeout(() => triggerTranslate(lang), 300);
@@ -97,9 +98,13 @@
     setActiveLang(lang);
     if (lang === 'en') {
       triggerTranslate('en');
+      lastLang = 'en';
       return;
     }
-    triggerTranslate(lang);
+    // If coming from English, give Google Translate a moment to reset
+    const delay = lastLang === 'en' ? 500 : 0;
+    setTimeout(() => triggerTranslate(lang), delay);
+    lastLang = lang;
   }
 
   bar.querySelectorAll('.sq-lang-btn').forEach(btn => {
