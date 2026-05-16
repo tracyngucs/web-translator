@@ -81,12 +81,19 @@
     });
   }
 
-  function translateTo(lang) {
+  function clearGoogCookies() {
     const host = window.location.hostname;
-    if (lang === 'en') {
-      document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${host}`;
-      document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${host}`;
-    } else {
+    const expires = 'expires=Thu, 01 Jan 1970 00:00:00 UTC';
+    document.cookie = `googtrans=; ${expires}; path=/`;
+    document.cookie = `googtrans=; ${expires}; path=/; domain=${host}`;
+    document.cookie = `googtrans=; ${expires}; path=/; domain=.${host}`;
+  }
+
+  function translateTo(lang) {
+    clearGoogCookies();
+    if (lang !== 'en') {
+      const host = window.location.hostname;
+      document.cookie = `googtrans=/en/${lang}; path=/`;
       document.cookie = `googtrans=/en/${lang}; path=/; domain=${host}`;
       document.cookie = `googtrans=/en/${lang}; path=/; domain=.${host}`;
     }
