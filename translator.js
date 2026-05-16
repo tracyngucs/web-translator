@@ -96,20 +96,20 @@
   function translateTo(lang) {
     setActiveLang(lang);
     if (lang === 'en') {
-      // Restore original using Google's own restore mechanism
-      const restore = document.querySelector('.goog-te-menu-value span');
-      const iframe = document.querySelector('.goog-te-banner-frame');
-      if (iframe) {
-        const btn = iframe.contentDocument && iframe.contentDocument.querySelector('a[class*="restore"]');
-        if (btn) { btn.click(); return; }
+      // Use Google Translate's internal restore function
+      if (typeof google !== 'undefined' && google.translate) {
+        const el = new google.translate.TranslateElement();
+        if (typeof el.restore === 'function') { el.restore(); return; }
       }
-      // Fallback: reload with cleared cookies
-      const host = window.location.hostname;
-      const exp = 'expires=Thu, 01 Jan 1970 00:00:00 UTC';
-      document.cookie = `googtrans=; ${exp}; path=/`;
-      document.cookie = `googtrans=; ${exp}; path=/; domain=${host}`;
-      document.cookie = `googtrans=; ${exp}; path=/; domain=.${host}`;
-      window.location.reload();
+      // Fallback: use the global restore function Google exposes
+      if (typeof googleTranslateElementInit !== 'undefined') {
+        const fn = window['google'] && window['google']['translate'] &&
+                   window['google']['translate']['TranslateElement'] &&
+                   window['google']['translate']['TranslateElement']['getInstance'];
+        if (fn) { fn().restore(); return; }
+      }
+      // Final fallback: trigger via the select (set to English)
+      triggerTranslate('en');
       return;
     }
     triggerTranslate(lang);
